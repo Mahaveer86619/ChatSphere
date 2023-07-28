@@ -13,7 +13,11 @@
     <string name="or">or</string>
 
     <string name="log_in_with_google">Log In with Google</string>
+    <string name="sign_in_with_google">Sign In with Google</string>
     <string name="log_in_with_facebook">Log In with Facebook</string>
+    <string name="sign_in_with_facebook">Sign In with Facebook</string>
     <string name="new_to_chatsphere">New to ChatSphere</string>
+    <string name="have_an_account">Have an account</string>
+
 
 </resources>
