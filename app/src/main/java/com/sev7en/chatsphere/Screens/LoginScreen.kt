@@ -21,5 +21,10 @@ class LoginScreen : AppCompatActivity() {
             finish()
         }
 
+        binding.mbContinue.setOnClickListener {
+            startActivity(Intent(this, LandingScreen::class.java))
+            finish()
+        }
+
     }
 }

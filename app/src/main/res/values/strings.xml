@@ -18,6 +18,15 @@
     <string name="sign_in_with_facebook">Sign In with Facebook</string>
     <string name="new_to_chatsphere">New to ChatSphere</string>
     <string name="have_an_account">Have an account</string>
+    <string name="navigation_drawer_close">close side bar</string>
+    <string name="navigation_drawer_open">open side bar</string>
+    <string name="darkorlightmode">dark or light mode</string>
+    <string name="settings">Settings</string>
+    <string name="invite_friends">Invite Friends</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="_3_37_pm">3:37 pm</string>
+    <string name="demo_chat">Shareable chat are now available</string>
 
 
 </resources>
