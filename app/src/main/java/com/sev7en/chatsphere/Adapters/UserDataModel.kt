@@ -1,8 +1,8 @@
 package com.sev7en.chatsphere.Adapters
 
 data class UserDataModel (
-    val uid: String,
-    val userImage :Int,
-    val userName : String,
-    val email: String
+    var uid: String? = null,
+    var userImage :Int? = null,
+    var userName : String? = null,
+    var email: String? = null
     )

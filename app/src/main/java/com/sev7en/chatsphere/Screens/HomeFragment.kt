@@ -20,23 +20,19 @@ import com.sev7en.chatsphere.Adapters.UserDataModel
 import com.sev7en.chatsphere.Adapters.UserRecyclerViewAdapter
 import com.sev7en.chatsphere.R
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [HomeFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class HomeFragment : Fragment(), ItemClicked {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
 
-
+    // Reciving the UserId of the logged in user
+    companion object {
+        fun newInstance(loggedInUserId: String?): HomeFragment {
+            val fragment = HomeFragment()
+            val args = Bundle()
+            args.putString("user_id", loggedInUserId)
+            fragment.arguments = args
+            return fragment
+        }
+    }
 
     // variables of the fragment
     private lateinit var recyclerview: RecyclerView
@@ -44,17 +40,8 @@ class HomeFragment : Fragment(), ItemClicked {
     private lateinit var mAuth: FirebaseAuth
     private lateinit var mDbRef: DatabaseReference
 
-
-
-
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    // got the logged in user id through arguments
+    val loggedInUserId = arguments?.getString("user_id")
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -64,29 +51,6 @@ class HomeFragment : Fragment(), ItemClicked {
         return inflater.inflate(R.layout.fragment_home, container, false)
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment HomeFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            HomeFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
-    }
-
-
-
-
 
     // Code of the Fragment
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -94,14 +58,10 @@ class HomeFragment : Fragment(), ItemClicked {
 
         // Initialize mAuth
         mAuth = FirebaseAuth.getInstance()
-        mDbRef = FirebaseDatabase.getInstance().reference
+        mDbRef = FirebaseDatabase.getInstance().getReference("chatsphere")
 
         // Initialize userList
         userList = ArrayList()
-
-
-        // for demo purpose
-        //dataInitilize(mDbRef)
 
 
         //linking recycler view
@@ -111,22 +71,30 @@ class HomeFragment : Fragment(), ItemClicked {
         recyclerview.adapter = adapter
 
 
-
         // use database reference to get all users
         mDbRef.child("User").addValueEventListener(object : ValueEventListener{
             override fun onDataChange(snapshot: DataSnapshot) {
 
-                //userList.clear()
-
                 //get all users by iterating through the child User using snapshot
                 for(postSnapshot in snapshot.children) {
+
                     val currentUser = postSnapshot.getValue(UserDataModel::class.java)
 
                     if (currentUser != null) {
-                        userList.add(currentUser)
-                    } else {
-                        Log.d("Dev", "Current user is null")
+//                        if (currentUser.uid == loggedInUserId) {
+//                            currentUser.userName = "Message Yourself"
+//
+//                        }
+
+                        //TODO the fucking loggedInUserId is null
+                        Log.d("Dev", loggedInUserId!!)
+
+                        if (currentUser.userName == "") {
+                            currentUser.userName = currentUser.uid
+                        }
                     }
+
+                    userList.add(currentUser!!)
 
                     Log.d("Dev", "Added a user in list")
 
@@ -148,4 +116,6 @@ class HomeFragment : Fragment(), ItemClicked {
 
         Toast.makeText(context, "${user.uid} clicked", Toast.LENGTH_SHORT).show()
     }
+
+
 }

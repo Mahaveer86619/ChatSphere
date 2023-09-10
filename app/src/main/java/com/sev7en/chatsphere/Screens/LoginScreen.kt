@@ -24,7 +24,12 @@ class LoginScreen : AppCompatActivity() {
 
             Log.d("Dev", "Already Signed in Redirecting to Landing Screen")
 
-            startActivity(Intent(this,LandingScreen::class.java))
+            // also passing the userid to filter out the logged in user from all the users
+            val loggedInUserId = currentUser.uid
+
+            val intent = Intent(this,LandingScreen::class.java)
+            intent.putExtra("userId", loggedInUserId)
+            startActivity(intent)
             finish()
         }
     }
