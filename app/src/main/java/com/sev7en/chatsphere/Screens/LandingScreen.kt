@@ -1,7 +1,10 @@
 package com.sev7en.chatsphere.Screens
 
+
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -9,6 +12,9 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import com.sev7en.chatsphere.R
 
 class LandingScreen : AppCompatActivity() {
@@ -17,9 +23,14 @@ class LandingScreen : AppCompatActivity() {
     private lateinit var navView: NavigationView
     private lateinit var toolbar: Toolbar
 
+    private lateinit var mAuth: FirebaseAuth
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_landing_screen)
+
+        // Initialize mAuth
+        mAuth = FirebaseAuth.getInstance()
 
         // Initialize views
         drawerLayout = findViewById(R.id.drawer_layout)
@@ -66,11 +77,23 @@ class LandingScreen : AppCompatActivity() {
                     Toast.makeText(this,"U have no friends",Toast.LENGTH_SHORT).show()
                 }
                 R.id.nav_settings -> {
-//                    val settingsFragment = SettingsFragment()
-//                    supportFragmentManager.beginTransaction()
-//                        .replace(R.id.container, settingsFragment)
-//                        .commit()
-                    Toast.makeText(this,"Settings Clicked", Toast.LENGTH_SHORT).show()
+                    val settingsFragment = SettingsFragment()
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.container, settingsFragment)
+                        .commit()
+                }
+                R.id.nav_home -> {
+                    val homeFragment = HomeFragment()
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.container, homeFragment)
+                        .commit()
+                }
+                R.id.log_out -> {
+
+                    Log.d("Dev", "signned out")
+                    mAuth.signOut()
+                    startActivity(Intent(this,LoginScreen::class.java))
+                    finish()
                 }
                 // Add other cases for different menu items as needed
             }

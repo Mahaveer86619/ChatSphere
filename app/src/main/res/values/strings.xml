@@ -27,6 +27,8 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="_3_37_pm">3:37 pm</string>
     <string name="demo_chat">Shareable chat are now available</string>
+    <string name="home">Home</string>
+    <string name="log_out">Log Out</string>
 
 
 </resources>

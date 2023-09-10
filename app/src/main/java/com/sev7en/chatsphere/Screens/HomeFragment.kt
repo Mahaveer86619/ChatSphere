@@ -1,12 +1,21 @@
 package com.sev7en.chatsphere.Screens
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.sev7en.chatsphere.Adapters.ItemClicked
 import com.sev7en.chatsphere.Adapters.UserDataModel
 import com.sev7en.chatsphere.Adapters.UserRecyclerViewAdapter
 import com.sev7en.chatsphere.R
@@ -21,7 +30,7 @@ private const val ARG_PARAM2 = "param2"
  * Use the [HomeFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class HomeFragment : Fragment() {
+class HomeFragment : Fragment(), ItemClicked {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
@@ -32,6 +41,8 @@ class HomeFragment : Fragment() {
     // variables of the fragment
     private lateinit var recyclerview: RecyclerView
     private lateinit var userList: ArrayList<UserDataModel>
+    private lateinit var mAuth: FirebaseAuth
+    private lateinit var mDbRef: DatabaseReference
 
 
 
@@ -81,31 +92,60 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // for demo purpose
-        dataInitilize()
+        // Initialize mAuth
+        mAuth = FirebaseAuth.getInstance()
+        mDbRef = FirebaseDatabase.getInstance().reference
 
+        // Initialize userList
+        userList = ArrayList()
+
+
+        // for demo purpose
+        //dataInitilize(mDbRef)
+
+
+        //linking recycler view
         recyclerview = view.findViewById(R.id.recyclerview)
         recyclerview.layoutManager = LinearLayoutManager(context)
-        val adapter = UserRecyclerViewAdapter(userList)
+        val adapter = UserRecyclerViewAdapter(this)
         recyclerview.adapter = adapter
 
 
+
+        // use database reference to get all users
+        mDbRef.child("User").addValueEventListener(object : ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+
+                //userList.clear()
+
+                //get all users by iterating through the child User using snapshot
+                for(postSnapshot in snapshot.children) {
+                    val currentUser = postSnapshot.getValue(UserDataModel::class.java)
+
+                    if (currentUser != null) {
+                        userList.add(currentUser)
+                    } else {
+                        Log.d("Dev", "Current user is null")
+                    }
+
+                    Log.d("Dev", "Added a user in list")
+
+                }
+                adapter.updateList(userList)
+
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("Dev", "Error: ${error.message}")
+            }
+
+        })
     }
 
-    // Demo arraylist for testing before calling from firebase
-    private fun dataInitilize () {
+    override fun onItemClicked(user: UserDataModel) {
 
-        userList = ArrayList<UserDataModel>()
+        Log.d("Dev", "${user.uid} clicked")
 
-        userList.add(UserDataModel(R.drawable.default_person, "person1", "hello", "00:00"))
-        userList.add(UserDataModel(R.drawable.default_person, "person2", "hello", "00:00"))
-        userList.add(UserDataModel(R.drawable.default_person, "person3", "hello", "00:00"))
-        userList.add(UserDataModel(R.drawable.default_person, "person4", "hello", "00:00"))
-        userList.add(UserDataModel(R.drawable.default_person, "person5", "hello", "00:00"))
-        userList.add(UserDataModel(R.drawable.default_person, "person6", "hello", "00:00"))
-        userList.add(UserDataModel(R.drawable.default_person, "person7", "hello", "00:00"))
-        userList.add(UserDataModel(R.drawable.default_person, "person8", "hello", "00:00"))
-        userList.add(UserDataModel(R.drawable.default_person, "person9", "hello", "00:00"))
-        userList.add(UserDataModel(R.drawable.default_person, "person10", "hello", "00:00"))
+        Toast.makeText(context, "${user.uid} clicked", Toast.LENGTH_SHORT).show()
     }
 }
