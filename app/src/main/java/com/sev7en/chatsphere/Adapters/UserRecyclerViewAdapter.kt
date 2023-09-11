@@ -11,7 +11,7 @@ import com.bumptech.glide.Glide
 import com.sev7en.chatsphere.R
 import de.hdodenhof.circleimageview.CircleImageView
 
-class UserRecyclerViewAdapter(private val listner : ItemClicked) : RecyclerView.Adapter<UserRecyclerViewAdapter.UserViewHolder>() {
+class UserRecyclerViewAdapter(private val listner : UserItemClicked) : RecyclerView.Adapter<UserRecyclerViewAdapter.UserViewHolder>() {
 
     private val itemList :ArrayList<UserDataModel> = ArrayList()
 
@@ -62,6 +62,6 @@ class UserRecyclerViewAdapter(private val listner : ItemClicked) : RecyclerView.
         Log.d("Dev", "Dataset Updated")
     }
 }
-interface ItemClicked {
+interface UserItemClicked {
     fun onItemClicked(user : UserDataModel)
 }

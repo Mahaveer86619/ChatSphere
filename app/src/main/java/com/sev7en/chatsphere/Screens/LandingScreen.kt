@@ -29,9 +29,6 @@ class LandingScreen : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_landing_screen)
 
-        // Receiving the passed userId through intent
-        val loggedInUserId = intent.getStringExtra("user_id")
-
         // Initialize mAuth
         mAuth = FirebaseAuth.getInstance()
 
@@ -50,7 +47,7 @@ class LandingScreen : AppCompatActivity() {
         toggle.syncState()
 
         // transferring the logged in user' userId to the homeFragment
-        val homeFragment = HomeFragment.newInstance(loggedInUserId)
+        val homeFragment = HomeFragment()
 
         //by default home fragment is visible so placing home fragment
         supportFragmentManager.beginTransaction()

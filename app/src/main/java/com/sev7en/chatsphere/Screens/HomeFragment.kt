@@ -1,5 +1,6 @@
 package com.sev7en.chatsphere.Screens
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -15,24 +16,12 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.sev7en.chatsphere.Adapters.ItemClicked
+import com.sev7en.chatsphere.Adapters.UserItemClicked
 import com.sev7en.chatsphere.Adapters.UserDataModel
 import com.sev7en.chatsphere.Adapters.UserRecyclerViewAdapter
 import com.sev7en.chatsphere.R
 
-class HomeFragment : Fragment(), ItemClicked {
-
-
-    // Reciving the UserId of the logged in user
-    companion object {
-        fun newInstance(loggedInUserId: String?): HomeFragment {
-            val fragment = HomeFragment()
-            val args = Bundle()
-            args.putString("user_id", loggedInUserId)
-            fragment.arguments = args
-            return fragment
-        }
-    }
+class HomeFragment : Fragment(), UserItemClicked {
 
     // variables of the fragment
     private lateinit var recyclerview: RecyclerView
@@ -40,8 +29,11 @@ class HomeFragment : Fragment(), ItemClicked {
     private lateinit var mAuth: FirebaseAuth
     private lateinit var mDbRef: DatabaseReference
 
-    // got the logged in user id through arguments
-    val loggedInUserId = arguments?.getString("user_id")
+    // Get the FirebaseUser object
+    val user = FirebaseAuth.getInstance().currentUser
+
+    // Get the UID of the logged-in user
+    val loggedInUserUid = user?.uid
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -86,19 +78,19 @@ class HomeFragment : Fragment(), ItemClicked {
 //
 //                        }
 
-                        //TODO the fucking loggedInUserId is null
-                        Log.d("Dev", loggedInUserId!!)
-
-                        if (currentUser.userName == "") {
-                            currentUser.userName = currentUser.uid
+                        if (currentUser.uid == loggedInUserUid) {
+                            // If the UID matches, change the name to "Message Yourself"
+                            currentUser.userName = "Message Yourself"
+                        } else {
+                            // If the UID doesn't match, replace the name with the email
+                            currentUser.userName = currentUser.email
                         }
                     }
 
                     userList.add(currentUser!!)
 
-                    Log.d("Dev", "Added a user in list")
-
                 }
+                Log.d("Dev", "Added users in list")
                 adapter.updateList(userList)
 
             }
@@ -112,9 +104,15 @@ class HomeFragment : Fragment(), ItemClicked {
 
     override fun onItemClicked(user: UserDataModel) {
 
-        Log.d("Dev", "${user.uid} clicked")
+        Log.d("Dev", "${user.userName} clicked, Redirecting to chat screen")
 
-        Toast.makeText(context, "${user.uid} clicked", Toast.LENGTH_SHORT).show()
+        val intent = Intent(context, ChatScreen::class.java)
+
+        intent.putExtra("Receiver_name", user.userName)
+        intent.putExtra("Receiver_uid", user.uid)
+
+        context?.startActivity(intent)
+
     }
 
 

@@ -96,7 +96,8 @@ class SignInScreen : AppCompatActivity() {
         mDbRef = FirebaseDatabase.getInstance().getReference("chatsphere")
 
         // stupid update the json file if the database is created before database creation it has the database link
-        val user = UserDataModel(uid, R.drawable.default_person, "", email)
+        //setting the name to emil user can change later
+        val user = UserDataModel(uid, R.drawable.default_person, email, email)
         mDbRef.child("User").child(uid).setValue(user)
 
         Log.d("Dev", "User added to Database")

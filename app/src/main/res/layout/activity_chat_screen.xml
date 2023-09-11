@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
+    android:orientation="vertical"
     tools:context=".Screens.ChatScreen"
     android:background="@color/bg_black">
 
@@ -34,6 +34,51 @@
                 android:gravity="center_vertical" />
         </androidx.appcompat.widget.Toolbar>
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/message_recyclerview"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:orientation="horizontal"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="10dp">
+
+            <EditText
+                android:id="@+id/et_message_box"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:hint="@string/messsage"
+                android:textColorHint="@color/whiter_grey"
+                android:textColor="@color/text_white"
+                android:textSize="18sp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_marginEnd="15dp"
+                android:layout_weight="8"
+                android:background="@drawable/message_box"
+                android:layout_gravity="center"
+                android:padding="10dp"
+                android:backgroundTint="@color/grey"
+                />
+            <ImageButton
+                android:id="@+id/ib_send_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/baseline_send_24"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:padding="10dp"
+                android:background="@drawable/send_btn"
+                android:backgroundTint="@color/grey"
+                />
+
+        </LinearLayout>
+
     </LinearLayout>
 
-</ScrollView>
+</LinearLayout>
