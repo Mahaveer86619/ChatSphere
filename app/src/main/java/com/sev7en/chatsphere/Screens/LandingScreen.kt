@@ -54,10 +54,16 @@ class LandingScreen : AppCompatActivity() {
             .replace(R.id.container, homeFragment)
             .commit()
 
+
         // on clicking profile pic in navigation bar profile fragment is switched
         val navHeader = navView.getHeaderView(0)
         val userImageView = navHeader.findViewById<ImageView>(R.id.profile_image)
 
+
+        // setting the image current user in the view
+
+
+        // on clicking the user pic the profile fragment is opened
         userImageView.setOnClickListener {
             val profileFragment = ProfileFragment()
             supportFragmentManager.beginTransaction()
@@ -70,6 +76,7 @@ class LandingScreen : AppCompatActivity() {
 
             drawerLayout.closeDrawer(GravityCompat.START)
         }
+
 
         // on clicking any of the items of the navigation bar action
         navView.setNavigationItemSelectedListener { menuItem ->
@@ -84,9 +91,8 @@ class LandingScreen : AppCompatActivity() {
                         .commit()
                 }
                 R.id.nav_home -> {
-                    val homeFragment = HomeFragment()
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.container, homeFragment)
+                        .replace(R.id.container, HomeFragment())
                         .commit()
                 }
                 R.id.log_out -> {

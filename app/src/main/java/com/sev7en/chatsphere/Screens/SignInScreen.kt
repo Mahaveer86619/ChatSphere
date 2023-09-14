@@ -42,12 +42,12 @@ class SignInScreen : AppCompatActivity() {
             if (binding.tfEmail.text?.isNotEmpty() == true){
                 email = binding.tfEmail.text.toString()
             } else {
-                Toast.makeText(this,"email cannnot be empty",Toast.LENGTH_SHORT).show()
+                Toast.makeText(this,"email cannot be empty",Toast.LENGTH_SHORT).show()
             }
             if (binding.tfPassword.text?.isNotEmpty() == true){
                 password = binding.tfPassword.text.toString()
             } else {
-                Toast.makeText(this,"password cannnot be empty",Toast.LENGTH_SHORT).show()
+                Toast.makeText(this,"password cannot be empty",Toast.LENGTH_SHORT).show()
             }
 
 
@@ -55,7 +55,6 @@ class SignInScreen : AppCompatActivity() {
 
 
                 signin(email, password)
-
 
 
             } else {
@@ -97,7 +96,7 @@ class SignInScreen : AppCompatActivity() {
 
         // stupid update the json file if the database is created before database creation it has the database link
         //setting the name to emil user can change later
-        val user = UserDataModel(uid, R.drawable.default_person, email, email)
+        val user = UserDataModel(uid, R.drawable.default_person, "", email)
         mDbRef.child("User").child(uid).setValue(user)
 
         Log.d("Dev", "User added to Database")
