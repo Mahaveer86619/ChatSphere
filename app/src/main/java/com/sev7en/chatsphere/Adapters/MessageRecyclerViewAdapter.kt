@@ -5,6 +5,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
+import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
@@ -32,27 +34,62 @@ class MessageRecyclerViewAdapter(private val listner: MessageItemClicked): Recyc
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
 
         // checks view type from overridden method to inflate the message layout
-        if (viewType == 1) {
-            // inflate received message
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.reciver_layout, parent, false)
-            val viewHolder = ReceiverViewHolder(view)
-            view.setOnClickListener{
-                listner.onItemClicked(messageList[viewHolder.adapterPosition])
+        // Inflate appropriate layout based on viewType
+        val layoutId = if (viewType == ITEM_SENT) R.layout.sender_layout else R.layout.reciver_layout
+        val view = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
+
+        return when (viewType) {
+            ITEM_SENT -> {
+                val viewHolder = SenderViewHolder(view)
+                setupClickListener(viewHolder, true)
+                viewHolder
             }
-
-            return viewHolder
-
-        }else {
-            // inflate sent message
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.sender_layout, parent, false)
-            val viewHolder = SenderViewHolder(view)
-            view.setOnClickListener{
-                listner.onItemClicked(messageList[viewHolder.adapterPosition])
+            else -> {
+                val viewHolder = ReceiverViewHolder(view)
+                setupClickListener(viewHolder, false)
+                viewHolder
             }
-
-            return viewHolder
         }
     }
+    private fun setupClickListener(viewHolder: RecyclerView.ViewHolder, isSender: Boolean) {
+        // detect long click on a item
+        viewHolder.itemView.setOnLongClickListener {
+            val message = messageList[viewHolder.adapterPosition]
+            showPopupWindow(viewHolder.itemView, message, isSender)
+            true
+        }
+    }
+
+    // custom pop up menu to show near the message item long pressed
+    @SuppressLint("InflateParams")
+    private fun showPopupWindow(anchorView: View, message: MessageDataModel, isSender: Boolean) {
+        val popupView = LayoutInflater.from(anchorView.context).inflate(R.layout.custom_popup, null)
+        val popupWindow = PopupWindow(popupView, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, true)
+
+        val copyTextView = popupView.findViewById<TextView>(R.id.copy)
+        val deleteTextView = popupView.findViewById<TextView>(R.id.delete)
+
+        copyTextView.setOnClickListener {
+            // Handle copy action for the clicked message
+            // Implement a function to copy text to clipboard
+            listner.onItemLongClick(message, ActionType.COPY)
+
+            popupWindow.dismiss()
+        }
+
+        deleteTextView.setOnClickListener {
+            // Handle delete action for the clicked message
+            popupWindow.dismiss()
+
+            // Notify the listener of the delete action
+            listner.onItemLongClick(message, ActionType.DELETE)
+        }
+
+        // Show the popup near or above the clicked message
+        popupWindow.showAsDropDown(anchorView)
+    }
+
+
 
     override fun getItemCount(): Int {
         return messageList.size
@@ -106,4 +143,9 @@ class MessageRecyclerViewAdapter(private val listner: MessageItemClicked): Recyc
 
 interface MessageItemClicked {
     fun onItemClicked (message: MessageDataModel)
+    fun onItemLongClick(message: MessageDataModel, action: ActionType): Boolean
+}
+enum class ActionType {
+    COPY,
+    DELETE
 }

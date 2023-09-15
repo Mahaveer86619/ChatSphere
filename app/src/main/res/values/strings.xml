@@ -34,6 +34,8 @@
     <string name="confirm">Confirm</string>
     <string name="cancel">Cancel</string>
     <string name="enter_your_unique_name">Enter Your Unique Name</string>
+    <string name="copy">Copy</string>
+    <string name="delete">Delete</string>
 
 
 </resources>
