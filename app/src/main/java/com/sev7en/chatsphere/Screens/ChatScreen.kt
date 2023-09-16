@@ -36,6 +36,8 @@ class ChatScreen : AppCompatActivity(), MessageItemClicked {
     private val mDbRef = FirebaseDatabase.getInstance().getReference("chatsphere")
     private val mAuth = FirebaseAuth.getInstance()
 
+    val adapter = MessageRecyclerViewAdapter(this)
+
     var receiver_room: String? = null
     var sender_room: String? = null
 
@@ -75,7 +77,6 @@ class ChatScreen : AppCompatActivity(), MessageItemClicked {
         // recyclerview setup
         messageRecyclerview = findViewById(R.id.message_recyclerview)
         messageRecyclerview.layoutManager = LinearLayoutManager(this)
-        val adapter = MessageRecyclerViewAdapter(this)
         messageRecyclerview.adapter = adapter
 
         messageList.clear()
@@ -185,33 +186,43 @@ class ChatScreen : AppCompatActivity(), MessageItemClicked {
             }
             ActionType.DELETE -> {
                 // Handle the delete action
-                //Log.d("Dev", "${message.message} deleted")
-//                val messageId = message.messageId // Assuming you have a unique message ID
-//
-//                // Remove the message from the database
-//                deleteMessage()
-//                mDbRef
-//                    .child("chat")
-//                    .child(sender_room!!)
-//                    .child("messages")
-//                    .child(messageId!!).removeValue()
-//                    .addOnSuccessListener {
-//                        mDbRef
-//                            .child("chat")
-//                            .child(receiver_room!!)
-//                            .child("messages")
-//                            .child(messageId).removeValue()
-//                    }
-//
-//                val adapter = MessageRecyclerViewAdapter(this)
-//
-//                // Remove the message from the local list
-//                val position = adapter.messageList.indexOf(message)
-//                if (position != -1) {
-//                    adapter.messageList.removeAt(position)
-//                    adapter.notifyItemRemoved(position)
-//                }
+                val messageId = message.messageId // Assuming you have a unique message ID
 
+                // Remove the message from the database
+                mDbRef
+                    .child("chat")
+                    .child(sender_room!!)
+                    .child("messages")
+                    .child(messageId!!)
+                    .removeValue()
+                    .addOnSuccessListener {
+                        mDbRef
+                            .child("chat")
+                            .child(receiver_room!!)
+                            .child("messages")
+                            .child(messageId)
+                            .removeValue()
+                            .addOnSuccessListener {
+                                // Message deleted from both sender and receiver
+                                Log.d("Dev", "${message.message} deleted")
+
+                                // Remove the message from the local list
+                                val position = messageList.indexOf(message)
+                                if (position != -1) {
+                                    messageList.removeAt(position)
+                                    adapter.notifyItemRemoved(position)
+                                }
+                            }
+                            .addOnFailureListener {
+                                Log.e("Dev", "Error deleting message: ${it.message}")
+                            }
+                    }
+                    .addOnFailureListener {
+                        Log.e("Dev", "Error deleting message: ${it.message}")
+                    }
+
+
+                Log.d("Dev", "${message.message} deleted")
                 Toast.makeText(this, "${message.message} deleted", Toast.LENGTH_SHORT).show()
 
             }
