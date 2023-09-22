@@ -2,10 +2,12 @@ package com.sev7en.chatsphere.Screens
 
 
 import android.content.Intent
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.Toolbar
@@ -13,8 +15,11 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.sev7en.chatsphere.R
 
 class LandingScreen : AppCompatActivity() {
@@ -24,6 +29,7 @@ class LandingScreen : AppCompatActivity() {
     private lateinit var toolbar: Toolbar
 
     private lateinit var mAuth: FirebaseAuth
+    private lateinit var mDbRef: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +37,9 @@ class LandingScreen : AppCompatActivity() {
 
         // Initialize mAuth
         mAuth = FirebaseAuth.getInstance()
+        mDbRef = FirebaseDatabase.getInstance().getReference("chatsphere")
+
+        val loggedInUserUid = mAuth.uid
 
         // Initialize views
         drawerLayout = findViewById(R.id.drawer_layout)
@@ -58,9 +67,45 @@ class LandingScreen : AppCompatActivity() {
         // on clicking profile pic in navigation bar profile fragment is switched
         val navHeader = navView.getHeaderView(0)
         val userImageView = navHeader.findViewById<ImageView>(R.id.profile_image)
+        val profileName = navHeader.findViewById<TextView>(R.id.profile_name)
 
 
-        // setting the image current user in the view
+        // setting the image, name of current user in the view
+        val user = mDbRef
+            .child("User")
+            .child(loggedInUserUid!!)
+
+        user.child("userImage")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    //get the userImage
+                    val userImage = snapshot.value.toString()
+
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("Dev", "$error")
+                }
+
+            })
+        user.child("userName")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+
+                        //get the username
+                        val userName = snapshot.value.toString()
+
+                        profileName.text = userName
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("Dev", "$error")
+                }
+
+            })
+
 
 
         // on clicking the user pic the profile fragment is opened
@@ -82,7 +127,9 @@ class LandingScreen : AppCompatActivity() {
         navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_invite_friends -> {
-                    Toast.makeText(this,"U have no friends",Toast.LENGTH_SHORT).show()
+                    val inviteLink = "https://github.com/Mahaveer86619/ChatSphere"
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(inviteLink))
+                    startActivity(intent)
                 }
                 R.id.nav_settings -> {
                     val settingsFragment = SettingsFragment()
@@ -97,7 +144,7 @@ class LandingScreen : AppCompatActivity() {
                 }
                 R.id.log_out -> {
 
-                    Log.d("Dev", "signned out")
+                    Log.d("Dev", "signed out")
                     mAuth.signOut()
                     startActivity(Intent(this,LoginScreen::class.java))
                     finish()
