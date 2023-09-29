@@ -19,6 +19,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.sev7en.chatsphere.Adapters.MessageDataModel
 import com.sev7en.chatsphere.Adapters.UserItemClicked
 import com.sev7en.chatsphere.Adapters.UserDataModel
 import com.sev7en.chatsphere.Adapters.UserRecyclerViewAdapter
@@ -33,7 +34,7 @@ class HomeFragment : Fragment(), UserItemClicked {
     private val mDbRef = FirebaseDatabase.getInstance().getReference("chatsphere")
 
     // Get the FirebaseUser object
-    val user = mAuth.currentUser
+    private val user = mAuth.currentUser
 
 
     // Get the UID of the logged-in user
@@ -76,7 +77,6 @@ class HomeFragment : Fragment(), UserItemClicked {
         mDbRef.child("User").addValueEventListener(object : ValueEventListener{
             override fun onDataChange(snapshot: DataSnapshot) {
 
-                //TODO bellow code is to be used but it crashes
                 userList.clear()
 
                 //get all users by iterating through the child User using snapshot
@@ -89,13 +89,45 @@ class HomeFragment : Fragment(), UserItemClicked {
                         currentUser.userName = "Message Yourself"
                     }
 
-                    userList.add(currentUser)
 
+                    // Fetch the last message for the user
+                    val senderRoom = currentUser.uid + loggedInUserUid
+                    val databaseReference = FirebaseDatabase.getInstance().getReference("chatsphere")
+                        .child("chat")
+                        .child(senderRoom)
+                        .child("messages")
+                        .orderByKey()
+                        .limitToLast(1)
+
+                    databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            if (snapshot.exists()) {
+                                for (messageSnapshot in snapshot.children) {
+                                    val lastMessage = messageSnapshot.getValue(
+                                        MessageDataModel::class.java)
+
+                                    // Create a UserDataModel instance and add it to the list
+                                    val user = UserDataModel(currentUser.uid, currentUser.userImage, currentUser.userName, lastMessage!!.message)
+                                    userList.add(user)
+
+                                }
+                            } else {
+                                // No messages found in the sender room, set a default value for lastMessage
+                                val user = UserDataModel(currentUser.uid, currentUser.userImage, currentUser.userName, "No messages")
+                                userList.add(user)
+                            }
+
+                            // Update your RecyclerView adapter with the updated list
+                            Log.d("Dev", "Added users in list")
+                            adapter.updateList(userList)
+
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            Log.e("Dev", "Error: ${error.message}")
+                        }
+                    })
                 }
-
-                Log.d("Dev", "Added users in list")
-                adapter.updateList(userList)
-
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -104,7 +136,14 @@ class HomeFragment : Fragment(), UserItemClicked {
 
         })
 
+
     }
+
+    // set the last message in each item
+    private fun loadLastMessage(sender_room: String){
+
+    }
+
 
     private fun currentUserNameIsNotEmpty (callback: (Boolean) -> Unit) {
 

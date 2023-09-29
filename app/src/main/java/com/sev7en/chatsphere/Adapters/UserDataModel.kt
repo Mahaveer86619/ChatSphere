@@ -4,5 +4,6 @@ data class UserDataModel (
     var uid: String? = null,
     var userImage :Int? = null,
     var userName : String? = null,
-    var email: String? = null
+    var email: String? = null,
+    val lastMessage: String? = null
     )

@@ -16,10 +16,9 @@ class UserRecyclerViewAdapter(private val listner : UserItemClicked) : RecyclerV
     private val itemList :ArrayList<UserDataModel> = ArrayList()
 
     inner class UserViewHolder(itemView : View) : RecyclerView.ViewHolder(itemView) {
-        val userImage = itemView.findViewById<CircleImageView>(R.id.userImage)
-        val userName = itemView.findViewById<TextView>(R.id.username)
-        val lastMessage = itemView.findViewById<TextView>(R.id.lastmessage)
-        val timeSent = itemView.findViewById<TextView>(R.id.timesent)
+        val userImage: CircleImageView = itemView.findViewById(R.id.userImage)
+        val userName: TextView = itemView.findViewById(R.id.username)
+        val lastMessage: TextView = itemView.findViewById(R.id.lastmessage)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder {
@@ -40,8 +39,7 @@ class UserRecyclerViewAdapter(private val listner : UserItemClicked) : RecyclerV
         val currentItem = itemList[position]
 
         holder.userName.text = currentItem.userName
-//        holder.lastMessage.text = currentItem.userLastMessage
-//        holder.timeSent.text = currentItem.timeSent
+        holder.lastMessage.text = currentItem.lastMessage
 
         Glide.with(holder.itemView.context)
             .load(currentItem.userImage)

@@ -36,6 +36,8 @@ class ChatScreen : AppCompatActivity(), MessageItemClicked {
     private val mDbRef = FirebaseDatabase.getInstance().getReference("chatsphere")
     private val mAuth = FirebaseAuth.getInstance()
 
+    private val loggedInUserId = mAuth.currentUser?.uid
+
     val adapter = MessageRecyclerViewAdapter(this)
 
     var receiver_room: String? = null
@@ -137,20 +139,29 @@ class ChatScreen : AppCompatActivity(), MessageItemClicked {
 
                             Log.d("Dev", "message sent = $message")
 
-                            // update the receiver side too similar to sender above
-                            val receiverMessageRef = mDbRef
-                                .child("chat")
-                                .child(receiver_room!!)
-                                .child("messages")
+                            // update the receiver side too similar to sender above if receiver is NOT the User itself
+                            if (receiver_uid != loggedInUserId){
+                                val receiverMessageRef = mDbRef
+                                    .child("chat")
+                                    .child(receiver_room!!)
+                                    .child("messages")
 
-                            val receiverMessageId = receiverMessageRef.push().key
+                                val receiverMessageId = receiverMessageRef.push().key
 
-                            // Set the message in the database under the generated message ID
-                            receiverMessageId?.let {id2 ->
-                                receiverMessageRef
-                                    .child(id2)
-                                    .setValue(MessageDataModel(receiverMessageId, message, sender_uid))
+                                // Set the message in the database under the generated message ID
+                                receiverMessageId?.let {id2 ->
+                                    receiverMessageRef
+                                        .child(id2)
+                                        .setValue(MessageDataModel(receiverMessageId, message, sender_uid))
+                                        .addOnSuccessListener {
+                                            Log.d("Dev", "message added in receiver database = $message")
+                                        }
+                                        .addOnCanceledListener {
+                                            Log.e("Dev", "Couldn't add the message in receiver database")
+                                        }
+                                }
                             }
+
                         }
                         .addOnCanceledListener {
                             Log.e("Dev", "Couldn't send the message")
