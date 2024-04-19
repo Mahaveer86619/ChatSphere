@@ -1,3 +1,4 @@
+import 'package:chatsphere/themes/theme.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -12,10 +13,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'ChatSphere',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: lightMode,
+      darkTheme: darkMode,
       home: const SafeArea(
         child: Placeholder(),
       ),
