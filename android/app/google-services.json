@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "299375821663",
+    "project_id": "chatsphere-efefa",
+    "storage_bucket": "chatsphere-efefa.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:299375821663:android:88a7e6c3b8cc3a14982cea",
+        "android_client_info": {
+          "package_name": "com.example.chatsphere"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgEauGGu-PL-9Nmy5SvMjmMbaTwiwvD1k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
