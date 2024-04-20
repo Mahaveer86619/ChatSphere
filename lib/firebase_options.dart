@@ -63,6 +63,9 @@ class DefaultFirebaseOptions {
     messagingSenderId: '299375821663',
     projectId: 'chatsphere-efefa',
     storageBucket: 'chatsphere-efefa.appspot.com',
+    androidClientId: '299375821663-nqf9e2328p3b4gflfal2g4rpt3efduvh.apps.googleusercontent.com',
+    iosClientId: '299375821663-gomac6nh8l89iog1rj8lktqqsj9fu31o.apps.googleusercontent.com',
     iosBundleId: 'com.example.chatsphere',
   );
+
 }

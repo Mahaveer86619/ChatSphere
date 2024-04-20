@@ -12,7 +12,20 @@
           "package_name": "com.example.chatsphere"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "299375821663-nqf9e2328p3b4gflfal2g4rpt3efduvh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.chatsphere",
+            "certificate_hash": "a22a6b24c5bd4b15e23313e561023d4a858cadf8"
+          }
+        },
+        {
+          "client_id": "299375821663-cl4an22ea1g6tamdh1i5fhmbsjln9jhd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDgEauGGu-PL-9Nmy5SvMjmMbaTwiwvD1k"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "299375821663-cl4an22ea1g6tamdh1i5fhmbsjln9jhd.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "299375821663-gomac6nh8l89iog1rj8lktqqsj9fu31o.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.chatsphere"
+              }
+            }
+          ]
         }
       }
     }
