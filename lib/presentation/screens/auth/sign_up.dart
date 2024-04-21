@@ -1,10 +1,15 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:chatsphere/presentation/components/elevated_btn.dart';
 import 'package:chatsphere/presentation/components/text_field.dart';
+import 'package:chatsphere/presentation/helpers/auth_gate.dart';
+import 'package:chatsphere/presentation/helpers/auth_service.dart';
 import 'package:chatsphere/presentation/screens/auth/phone_auth.dart';
 import 'package:chatsphere/presentation/screens/auth/sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -15,11 +20,15 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  bool isLoading = false;
+
+  final GetIt getIt = GetIt.instance;
+
+  late AuthService authService;
+
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final rePasswordController = TextEditingController();
-
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void dispose() {
@@ -29,7 +38,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  void onSignUp() {}
+  void onSignUp() async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+      debugPrint(
+          "email: ${emailController.text.trim()}\npassword: ${passwordController.text.trim()}");
+      final result = await authService.emailSignUp(
+        emailController.text.trim(),
+        passwordController.text.trim(),
+      );
+      if (result) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const AuthGate()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Error, ${e.toString()}",
+            style: TextStyle(color: Theme.of(context).colorScheme.onError),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   void onChangeSignIn() {
     Navigator.pushReplacement(
       context,
@@ -39,13 +81,39 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  void onGoogleSignUp() {
+  void onGoogleSignUp() async {
     try {
-      GoogleAuthProvider googleAuthProvider = GoogleAuthProvider();
-      _auth.signInWithProvider(googleAuthProvider);
-    } catch (error) {
-      debugPrint(error.toString());
+      setState(() {
+        isLoading = true;
+      });
+      final result = await authService.googleAuth();
+      if (result) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const AuthGate()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Error, ${e.toString()}",
+            style: TextStyle(color: Theme.of(context).colorScheme.onError),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    authService = getIt.get<AuthService>();
   }
 
   @override
@@ -92,6 +160,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             controller: emailController,
             keyboardType: TextInputType.emailAddress,
             label: 'Email',
+            keyboardAction: TextInputAction.next,
           ),
           const SizedBox(
             height: 16,
@@ -101,6 +170,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             controller: passwordController,
             keyboardType: TextInputType.visiblePassword,
             label: 'Password',
+            keyboardAction: TextInputAction.next,
           ),
           const SizedBox(
             height: 16,
@@ -110,13 +180,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
             controller: rePasswordController,
             keyboardType: TextInputType.visiblePassword,
             label: 'Re-enter Password',
+            keyboardAction: TextInputAction.done,
           ),
           // Elevated btn
           const SizedBox(
             height: 50,
           ),
           MyElevatedButton(
-            onPressed: onSignUp,
+            onPressed: () => {
+              if (passwordController.text == rePasswordController.text)
+                onSignUp()
+              else
+                {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "Error, passwords don't match",
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onError),
+                      ),
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                }
+            },
             text: 'Sign Up',
             mheight: 40,
           ),
@@ -157,7 +244,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           // phone
           GestureDetector(
             onTap: () => {
-              Navigator.pushReplacement(
+              Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const PhoneAuthScreen(),
@@ -206,7 +293,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
           // google
           GestureDetector(
-            onTap: () => {onGoogleSignUp()},
+            onTap: onGoogleSignUp,
             child: Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.background,

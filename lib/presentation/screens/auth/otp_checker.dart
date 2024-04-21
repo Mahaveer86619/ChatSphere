@@ -1,36 +1,81 @@
 import 'package:chatsphere/presentation/components/elevated_btn.dart';
 import 'package:chatsphere/presentation/components/text_field.dart';
+import 'package:chatsphere/presentation/helpers/auth_gate.dart';
+import 'package:chatsphere/presentation/helpers/auth_service.dart';
 import 'package:chatsphere/presentation/screens/auth/auth_page.dart';
-import 'package:chatsphere/presentation/screens/auth/otp_checker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pinput/pinput.dart';
 
-class PhoneAuthScreen extends StatefulWidget {
-  const PhoneAuthScreen({super.key});
+class OtpChecker extends StatefulWidget {
+  final String verificationId;
+  final String phoneNumber;
+
+  const OtpChecker({
+    super.key,
+    required this.verificationId,
+    required this.phoneNumber,
+  });
 
   @override
-  State<PhoneAuthScreen> createState() => _PhoneAuthScreenState();
+  State<OtpChecker> createState() => _OtpCheckerState();
 }
 
-class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
-  final phoneController = TextEditingController();
+class _OtpCheckerState extends State<OtpChecker> {
+  bool isLoading = false;
 
-  void onPhoneSubmit() {
-    verifyPhoneNumber(phoneController.text.trim());
+  final GetIt getIt = GetIt.instance;
+  late AuthService authService;
+
+  final otpController = TextEditingController();
+
+  void onOtpSubmit() async {
+    final result = await authService.otpSignIn(
+      otpController.text.trim(),
+      widget.verificationId,
+    );
+    if (result) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AuthGate(),
+        ),
+      );
+    }
   }
 
   void onEmailAuth() {
     Navigator.pop(context);
   }
 
-  void onGoogleSignUp() {
-    final FirebaseAuth auth = FirebaseAuth.instance;
+  void onGoogleSignUp() async {
     try {
-      GoogleAuthProvider googleAuthProvider = GoogleAuthProvider();
-      auth.signInWithProvider(googleAuthProvider);
-    } catch (error) {
-      debugPrint(error.toString());
+      setState(() {
+        isLoading = true;
+      });
+      final result = await authService.googleAuth();
+      if (result) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const AuthGate()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Error, ${e.toString()}",
+            style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -43,50 +88,25 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     );
   }
 
-  Future<void> verifyPhoneNumber(String phoneNumber) async {
-    final auth = FirebaseAuth.instance;
-    await auth.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await auth.signInWithCredential(credential);
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        debugPrint(e.toString());
-      },
-      codeSent: (String verificationId, int? resendToken) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OtpChecker(verificationId: verificationId, phoneNumber: phoneController.text.trim(),),
-          ),
-        );
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text("Auto-retrieval timed out"),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-
-        debugPrint("Auto-retrieval timed out: $verificationId");
-      },
-    );
+  @override
+  void initState() {
+    super.initState();
+    authService = getIt.get<AuthService>();
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(22.0),
-          child: _buildUi(),
-        ),
-      ),
-    );
+        child: Scaffold(
+            body: Padding(
+      padding: const EdgeInsets.all(22.0),
+      child: _buildUi(),
+    )));
   }
 
   Widget _buildUi() {
+    final ThemeData theme = Theme.of(context);
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,14 +117,14 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           ),
           // Text
           Text(
-            'Enter your mobile number.',
+            'Enter code sent to your phone.',
             style: GoogleFonts.poppins(
               fontSize: 22,
               color: Theme.of(context).colorScheme.onBackground,
             ),
           ),
           Text(
-            'We will send you a confirmation code',
+            'we sent to ${widget.phoneNumber}.',
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: Theme.of(context).colorScheme.onBackground,
@@ -114,19 +134,13 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           const SizedBox(
             height: 85,
           ),
-          MyPhoneField(
-            hintText: "Phone Number",
-            controller: phoneController,
-            keyboardType: TextInputType.phone,
-            label: "Phone Number",
-            keyboardAction: TextInputAction.done,
-          ),
+          PinCodeField(otpController: otpController),
           const SizedBox(
             height: 170,
           ),
           MyElevatedButton(
-            onPressed: onPhoneSubmit,
-            text: 'Proceed',
+            onPressed: onOtpSubmit,
+            text: 'Submit',
             mheight: 40,
           ),
           const SizedBox(

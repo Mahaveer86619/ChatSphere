@@ -1,8 +1,12 @@
 import 'package:chatsphere/presentation/components/elevated_btn.dart';
 import 'package:chatsphere/presentation/components/text_field.dart';
+import 'package:chatsphere/presentation/helpers/auth_gate.dart';
+import 'package:chatsphere/presentation/helpers/auth_service.dart';
 import 'package:chatsphere/presentation/screens/auth/phone_auth.dart';
 import 'package:chatsphere/presentation/screens/auth/sign_up.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -13,11 +17,15 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  bool isLoading = false;
+
+  final GetIt getIt = GetIt.instance;
+
+  late AuthService authService;
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  void onSignIn() {}
   void onChangeSignUp() {
     Navigator.pushReplacement(
       context,
@@ -25,6 +33,73 @@ class _SignInScreenState extends State<SignInScreen> {
         builder: (context) => const SignUpScreen(),
       ),
     );
+  }
+
+  void onEmailSignIn(String email, String password) async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+      await authService.emailSignIn(email, password);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Error, ${e.toString()}",
+            style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void onGoogleSignUp() async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+      final result = await authService.googleAuth();
+      if (result) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const AuthGate()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Error, ${e.toString()}",
+            style: TextStyle(color: Theme.of(context).colorScheme.onError),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void onPhoneAuth() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PhoneAuthScreen(),
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    authService = getIt.get<AuthService>();
   }
 
   @override
@@ -71,6 +146,7 @@ class _SignInScreenState extends State<SignInScreen> {
             controller: emailController,
             keyboardType: TextInputType.emailAddress,
             label: 'Email',
+            keyboardAction: TextInputAction.next,
           ),
           const SizedBox(
             height: 16,
@@ -80,13 +156,17 @@ class _SignInScreenState extends State<SignInScreen> {
             controller: passwordController,
             keyboardType: TextInputType.visiblePassword,
             label: 'Password',
+            keyboardAction: TextInputAction.done,
           ),
           // Elevated btn
           const SizedBox(
             height: 85,
           ),
           MyElevatedButton(
-            onPressed: onSignIn,
+            onPressed: () => onEmailSignIn(
+              emailController.text.trim(),
+              passwordController.text.trim(),
+            ),
             text: 'Sign In',
             mheight: 40,
           ),
@@ -123,16 +203,9 @@ class _SignInScreenState extends State<SignInScreen> {
           const SizedBox(
             height: 30,
           ),
-
           // phone
           GestureDetector(
-            onTap: () => {
-              Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PhoneAuthScreen(),
-                  ))
-            },
+            onTap: onPhoneAuth,
             child: Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.background,
@@ -175,42 +248,45 @@ class _SignInScreenState extends State<SignInScreen> {
             height: 16,
           ),
           // google
-          Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.background,
-              borderRadius: BorderRadius.circular(10.0),
-              border: Border.all(
-                // Border
-                color: Theme.of(context).colorScheme.onBackground,
-                width: 2.0,
+          GestureDetector(
+            onTap: onGoogleSignUp,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.background,
+                borderRadius: BorderRadius.circular(10.0),
+                border: Border.all(
+                  // Border
+                  color: Theme.of(context).colorScheme.onBackground,
+                  width: 2.0,
+                ),
               ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
-              ),
-              child: Row(
-                children: [
-                  // Icon
-                  Image.asset(
-                    'assets/icons/google.png',
-                    height: 24,
-                    width: 24,
-                    color: Theme.of(context).colorScheme.onBackground,
-                  ),
-                  // Text
-                  const SizedBox(
-                    width: 16,
-                  ),
-                  Text(
-                    'Google account',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    // Icon
+                    Image.asset(
+                      'assets/icons/google.png',
+                      height: 24,
+                      width: 24,
                       color: Theme.of(context).colorScheme.onBackground,
                     ),
-                  ),
-                ],
+                    // Text
+                    const SizedBox(
+                      width: 16,
+                    ),
+                    Text(
+                      'Google account',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.onBackground,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

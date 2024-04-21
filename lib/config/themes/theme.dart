@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 ThemeData lightMode = ThemeData(
   colorScheme: const ColorScheme.light(
@@ -26,6 +27,7 @@ ThemeData lightMode = ThemeData(
     selectedLabelStyle: TextStyle(color: Color(0xFF1E0342)),
     unselectedLabelStyle: TextStyle(color: Color(0xFFD2B0FF)),
   ),
+  textTheme: GoogleFonts.poppinsTextTheme(),
 );
 
 ThemeData darkMode = ThemeData(
@@ -55,4 +57,5 @@ ThemeData darkMode = ThemeData(
     selectedLabelStyle: TextStyle(color: Color(0xFF1E0342)),
     unselectedLabelStyle: TextStyle(color: Color(0xFFD2B0FF)),
   ),
+  textTheme: GoogleFonts.poppinsTextTheme(),
 );

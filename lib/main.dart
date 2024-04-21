@@ -1,20 +1,17 @@
-import 'package:chatsphere/firebase_options.dart';
+import 'package:chatsphere/config/firebase_config.dart';
 import 'package:chatsphere/config/themes/theme.dart';
 import 'package:chatsphere/presentation/helpers/auth_gate.dart';
-import 'package:chatsphere/presentation/screens/auth/auth_page.dart';
-import 'package:chatsphere/presentation/screens/auth/sign_in.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-void main() async{
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+void main() async {
+  await setup();
   runApp(const MyApp());
+}
+
+Future<void> setup() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await setupFirebase();
+  await registerService();
 }
 
 class MyApp extends StatelessWidget {
