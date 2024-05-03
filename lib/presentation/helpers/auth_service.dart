@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class AuthService {
   final FirebaseAuth auth = FirebaseAuth.instance;
-  AuthService() {}
+  AuthService();
 
   User? user;
 
@@ -71,5 +71,15 @@ class AuthService {
       debugPrint(e.toString());
     }
     return false;
+  }
+
+  Future<bool> signOut() async {
+    try {
+      await auth.signOut();
+    } catch (e) {
+      debugPrint(e.toString());
+      return false;
+    }
+    return true;
   }
 }

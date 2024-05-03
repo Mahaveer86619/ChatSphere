@@ -1,14 +1,17 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:chatsphere/presentation/components/aternative_auth_card.dart';
 import 'package:chatsphere/presentation/components/elevated_btn.dart';
+import 'package:chatsphere/presentation/components/loading.dart';
 import 'package:chatsphere/presentation/components/text_field.dart';
 import 'package:chatsphere/presentation/helpers/auth_gate.dart';
 import 'package:chatsphere/presentation/helpers/auth_service.dart';
+import 'package:chatsphere/presentation/helpers/database_service.dart';
+import 'package:chatsphere/presentation/helpers/storage_service.dart';
+import 'package:chatsphere/presentation/screens/auth/complete_auth.dart';
 import 'package:chatsphere/presentation/screens/auth/phone_auth.dart';
 import 'package:chatsphere/presentation/screens/auth/sign_in.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -23,36 +26,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool isLoading = false;
 
   final GetIt getIt = GetIt.instance;
-
   late AuthService authService;
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final rePasswordController = TextEditingController();
 
-  @override
-  void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    rePasswordController.dispose();
-    super.dispose();
-  }
-
   void onSignUp() async {
     try {
       setState(() {
         isLoading = true;
       });
-      debugPrint(
-          "email: ${emailController.text.trim()}\npassword: ${passwordController.text.trim()}");
       final result = await authService.emailSignUp(
         emailController.text.trim(),
         passwordController.text.trim(),
       );
       if (result) {
+        // uploadAndSaveUserProfile(uid: authService.user!.uid);
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const AuthGate()),
+          MaterialPageRoute(builder: (context) => const CompleteAuthScreen(authMethod: 'Email',)),
         );
       }
     } catch (e) {
@@ -72,6 +65,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  // Future<String?> uploadAndSaveUserProfile({
+  //   required String uid,
+  // }) async {
+  //   final randomAvatar = getRandomAvatar();
+  //   final pfpUrl = await storageService.uploadAvatarAndGetUrl(
+  //     assetPath: randomAvatar,
+  //   );
+  //   if (pfpUrl != null) {
+  //     await databaseService.createUserProfile(
+  //       userProfile: UserProfile(
+  //         uid: uid,
+  //         pfpUrl: pfpUrl,
+  //       ),
+  //     );
+  //     return pfpUrl;
+  //   } else {
+  //     return null;
+  //   }
+  // }
+
   void onChangeSignIn() {
     Navigator.pushReplacement(
       context,
@@ -90,7 +103,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (result) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const AuthGate()),
+          MaterialPageRoute(builder: (context) => const CompleteAuthScreen(authMethod: 'Google',)),
         );
       }
     } catch (e) {
@@ -117,12 +130,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    rePasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
         body: Padding(
           padding: const EdgeInsets.all(22.0),
-          child: _buildUi(),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (isLoading)
+                  const Center(
+                    child: LoadingWidget(text: "Signing Up..."),
+                  ),
+                if (!isLoading) _buildUi(),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -136,7 +169,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
           const SizedBox(
             height: 30,
           ),
-          // Text
           Text(
             'Create Account',
             style: GoogleFonts.poppins(
@@ -197,7 +229,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       content: Text(
                         "Error, passwords don't match",
                         style: TextStyle(
-                            color: Theme.of(context).colorScheme.onError),
+                          color: Theme.of(context).colorScheme.onError,
+                        ),
                       ),
                       backgroundColor: Theme.of(context).colorScheme.error,
                     ),
@@ -260,30 +293,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   width: 2.0,
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
+              child: const Padding(
+                padding: EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 12,
                 ),
-                child: Row(
-                  children: [
-                    // Icon
-                    Icon(
-                      Icons.phone,
-                      color: Theme.of(context).colorScheme.onBackground,
-                    ),
-                    // Text
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    Text(
-                      'phone number',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Theme.of(context).colorScheme.onBackground,
-                      ),
-                    ),
-                  ],
+                child: AlternateAuthCard(
+                  asset: Icons.phone,
+                  text: "Phone Number",
                 ),
               ),
             ),
@@ -304,34 +321,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   width: 2.0,
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
-                ),
-                child: Row(
-                  children: [
-                    // Icon
-                    Image.asset(
-                      'assets/icons/google.png',
-                      height: 24,
-                      width: 24,
-                      color: Theme.of(context).colorScheme.onBackground,
-                    ),
-                    // Text
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    Text(
-                      'Google account',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Theme.of(context).colorScheme.onBackground,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: const Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  child: AlternateGoogleAuthCard(
+                    text: "Google Account",
+                  )),
             ),
           ),
           const SizedBox(

@@ -1,9 +1,16 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'package:chatsphere/presentation/components/aternative_auth_card.dart';
 import 'package:chatsphere/presentation/components/elevated_btn.dart';
+import 'package:chatsphere/presentation/components/loading.dart';
 import 'package:chatsphere/presentation/components/text_field.dart';
+import 'package:chatsphere/presentation/helpers/auth_gate.dart';
+import 'package:chatsphere/presentation/helpers/auth_service.dart';
 import 'package:chatsphere/presentation/screens/auth/auth_page.dart';
 import 'package:chatsphere/presentation/screens/auth/otp_checker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PhoneAuthScreen extends StatefulWidget {
@@ -14,6 +21,11 @@ class PhoneAuthScreen extends StatefulWidget {
 }
 
 class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
+  bool isLoading = false;
+
+  final GetIt getIt = GetIt.instance;
+  late AuthService authService;
+
   final phoneController = TextEditingController();
 
   void onPhoneSubmit() {
@@ -24,13 +36,32 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     Navigator.pop(context);
   }
 
-  void onGoogleSignUp() {
-    final FirebaseAuth auth = FirebaseAuth.instance;
+  void onGoogleSignUp() async{
     try {
-      GoogleAuthProvider googleAuthProvider = GoogleAuthProvider();
-      auth.signInWithProvider(googleAuthProvider);
-    } catch (error) {
-      debugPrint(error.toString());
+      setState(() {
+        isLoading = true;
+      });
+      final result = await authService.googleAuth();
+      if (result) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const AuthGate()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Error, ${e.toString()}",
+            style: TextStyle(color: Theme.of(context).colorScheme.onError),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -45,33 +76,65 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
 
   Future<void> verifyPhoneNumber(String phoneNumber) async {
     final auth = FirebaseAuth.instance;
-    await auth.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await auth.signInWithCredential(credential);
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        debugPrint(e.toString());
-      },
-      codeSent: (String verificationId, int? resendToken) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OtpChecker(verificationId: verificationId, phoneNumber: phoneController.text.trim(),),
+    try {
+      setState(() {
+        isLoading = true;
+      });
+      await auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await auth.signInWithCredential(credential);
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          debugPrint(e.toString());
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpChecker(
+                verificationId: verificationId,
+                phoneNumber: phoneController.text.trim(),
+              ),
+            ),
+          );
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text("Auto-retrieval timed out"),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Error, ${e.toString()}",
+            style: TextStyle(color: Theme.of(context).colorScheme.onError),
           ),
-        );
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text("Auto-retrieval timed out"),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
-        debugPrint("Auto-retrieval timed out: $verificationId");
-      },
-    );
+  @override
+  void initState() {
+    super.initState();
+    authService = getIt.get<AuthService>();
+  }
+
+  @override
+  void dispose() {
+    phoneController.dispose();
+    super.dispose();
   }
 
   @override
@@ -80,7 +143,19 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       child: Scaffold(
         body: Padding(
           padding: const EdgeInsets.all(22.0),
-          child: _buildUi(),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (isLoading)
+                  const Center(
+                    child: LoadingWidget(text: "Verifying Phone number..."),
+                  ),
+                if (!isLoading) _buildUi(),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -174,30 +249,14 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   width: 2.0,
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
+              child: const Padding(
+                padding: EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 12,
                 ),
-                child: Row(
-                  children: [
-                    // Icon
-                    Icon(
-                      Icons.email_outlined,
-                      color: Theme.of(context).colorScheme.onBackground,
-                    ),
-                    // Text
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    Text(
-                      'Email & Password',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Theme.of(context).colorScheme.onBackground,
-                      ),
-                    ),
-                  ],
+                child: AlternateAuthCard(
+                  asset: Icons.email,
+                  text: "Email & Password",
                 ),
               ),
             ),
@@ -218,32 +277,13 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   width: 2.0,
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
+              child: const Padding(
+                padding: EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 12,
                 ),
-                child: Row(
-                  children: [
-                    // Icon
-                    Image.asset(
-                      'assets/icons/google.png',
-                      height: 24,
-                      width: 24,
-                      color: Theme.of(context).colorScheme.onBackground,
-                    ),
-                    // Text
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    Text(
-                      'Google account',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Theme.of(context).colorScheme.onBackground,
-                      ),
-                    ),
-                  ],
+                child: AlternateGoogleAuthCard(
+                  text: "Google Account",
                 ),
               ),
             ),

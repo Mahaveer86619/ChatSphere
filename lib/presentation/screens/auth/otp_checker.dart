@@ -1,4 +1,8 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'package:chatsphere/presentation/components/aternative_auth_card.dart';
 import 'package:chatsphere/presentation/components/elevated_btn.dart';
+import 'package:chatsphere/presentation/components/loading.dart';
 import 'package:chatsphere/presentation/components/text_field.dart';
 import 'package:chatsphere/presentation/helpers/auth_gate.dart';
 import 'package:chatsphere/presentation/helpers/auth_service.dart';
@@ -8,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pinput/pinput.dart';
+
+import 'complete_auth.dart';
 
 class OtpChecker extends StatefulWidget {
   final String verificationId;
@@ -32,17 +38,36 @@ class _OtpCheckerState extends State<OtpChecker> {
   final otpController = TextEditingController();
 
   void onOtpSubmit() async {
-    final result = await authService.otpSignIn(
-      otpController.text.trim(),
-      widget.verificationId,
-    );
-    if (result) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const AuthGate(),
+    try {
+      setState(() {
+        isLoading = true;
+      });
+      final result = await authService.otpSignIn(
+        otpController.text.trim(),
+        widget.verificationId,
+      );
+      if (result) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AuthGate(),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Error, ${e.toString()}",
+            style: TextStyle(color: Theme.of(context).colorScheme.onError),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -97,11 +122,25 @@ class _OtpCheckerState extends State<OtpChecker> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-        child: Scaffold(
-            body: Padding(
-      padding: const EdgeInsets.all(22.0),
-      child: _buildUi(),
-    )));
+      child: Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(22.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (isLoading)
+                  const Center(
+                    child: LoadingWidget(text: "Verifying OTP..."),
+                  ),
+                if (!isLoading) _buildUi(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildUi() {
@@ -120,14 +159,14 @@ class _OtpCheckerState extends State<OtpChecker> {
             'Enter code sent to your phone.',
             style: GoogleFonts.poppins(
               fontSize: 22,
-              color: Theme.of(context).colorScheme.onBackground,
+              color: theme.colorScheme.onBackground,
             ),
           ),
           Text(
             'we sent to ${widget.phoneNumber}.',
             style: GoogleFonts.poppins(
               fontSize: 14,
-              color: Theme.of(context).colorScheme.onBackground,
+              color: theme.colorScheme.onBackground,
             ),
           ),
           // phone number
@@ -151,7 +190,7 @@ class _OtpCheckerState extends State<OtpChecker> {
             children: [
               Divider(
                 thickness: 1.0,
-                color: Theme.of(context).colorScheme.onBackground,
+                color: theme.colorScheme.onBackground,
               ),
               const SizedBox(
                 width: 10,
@@ -160,7 +199,7 @@ class _OtpCheckerState extends State<OtpChecker> {
                 'or sign in with',
                 style: GoogleFonts.poppins(
                   fontSize: 12,
-                  color: Theme.of(context).colorScheme.onBackground,
+                  color: theme.colorScheme.onBackground,
                 ),
               ),
               const SizedBox(
@@ -168,7 +207,7 @@ class _OtpCheckerState extends State<OtpChecker> {
               ),
               Divider(
                 thickness: 1.0,
-                color: Theme.of(context).colorScheme.onBackground,
+                color: theme.colorScheme.onBackground,
               ),
             ],
           ),
@@ -180,40 +219,23 @@ class _OtpCheckerState extends State<OtpChecker> {
             onTap: onEmailAuth,
             child: Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.background,
+                color: theme.colorScheme.background,
                 borderRadius: BorderRadius.circular(10.0),
                 border: Border.all(
                   // Border
-                  color: Theme.of(context).colorScheme.onBackground,
+                  color: theme.colorScheme.onBackground,
                   width: 2.0,
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
-                ),
-                child: Row(
-                  children: [
-                    // Icon
-                    Icon(
-                      Icons.email_outlined,
-                      color: Theme.of(context).colorScheme.onBackground,
-                    ),
-                    // Text
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    Text(
-                      'Email & Password',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Theme.of(context).colorScheme.onBackground,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: const Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  child: AlternateAuthCard(
+                    asset: Icons.email,
+                    text: "Email & Password",
+                  )),
             ),
           ),
           const SizedBox(
@@ -224,40 +246,21 @@ class _OtpCheckerState extends State<OtpChecker> {
             onTap: onGoogleSignUp,
             child: Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.background,
+                color: theme.colorScheme.background,
                 borderRadius: BorderRadius.circular(10.0),
                 border: Border.all(
                   // Border
-                  color: Theme.of(context).colorScheme.onBackground,
+                  color: theme.colorScheme.onBackground,
                   width: 2.0,
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
+              child: const Padding(
+                padding: EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 12,
                 ),
-                child: Row(
-                  children: [
-                    // Icon
-                    Image.asset(
-                      'assets/icons/google.png',
-                      height: 24,
-                      width: 24,
-                      color: Theme.of(context).colorScheme.onBackground,
-                    ),
-                    // Text
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    Text(
-                      'Google account',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Theme.of(context).colorScheme.onBackground,
-                      ),
-                    ),
-                  ],
+                child: AlternateGoogleAuthCard(
+                  text: "Google Account",
                 ),
               ),
             ),
@@ -274,7 +277,7 @@ class _OtpCheckerState extends State<OtpChecker> {
                   "Return back?",
                   style: GoogleFonts.poppins(
                     fontSize: 12,
-                    color: Theme.of(context).colorScheme.onBackground,
+                    color: theme.colorScheme.onBackground,
                   ),
                 ),
                 const SizedBox(
@@ -285,7 +288,7 @@ class _OtpCheckerState extends State<OtpChecker> {
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onBackground,
+                    color: theme.colorScheme.onBackground,
                   ),
                 )
               ],

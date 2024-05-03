@@ -1,4 +1,7 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:chatsphere/presentation/components/elevated_btn.dart';
+import 'package:chatsphere/presentation/components/loading.dart';
 import 'package:chatsphere/presentation/components/text_field.dart';
 import 'package:chatsphere/presentation/helpers/auth_gate.dart';
 import 'package:chatsphere/presentation/helpers/auth_service.dart';
@@ -8,6 +11,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import 'complete_auth.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -40,7 +45,15 @@ class _SignInScreenState extends State<SignInScreen> {
       setState(() {
         isLoading = true;
       });
-      await authService.emailSignIn(email, password);
+      final result = await authService.emailSignIn(email, password);
+      if (result) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AuthGate(),
+          ),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -67,7 +80,9 @@ class _SignInScreenState extends State<SignInScreen> {
       if (result) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const AuthGate()),
+          MaterialPageRoute(
+            builder: (context) => const CompleteAuthScreen(authMethod: 'Email',),
+          ),
         );
       }
     } catch (e) {
@@ -103,12 +118,31 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
         body: Padding(
           padding: const EdgeInsets.all(22.0),
-          child: _buildUi(),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (isLoading)
+                  const Center(
+                    child: LoadingWidget(text: "Signing In..."),
+                  ),
+                if (!isLoading) _buildUi(),
+              ],
+            ),
+          ),
         ),
       ),
     );

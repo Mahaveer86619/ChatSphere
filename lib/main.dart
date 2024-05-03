@@ -1,6 +1,7 @@
 import 'package:chatsphere/config/firebase_config.dart';
 import 'package:chatsphere/config/themes/theme.dart';
 import 'package:chatsphere/presentation/helpers/auth_gate.dart';
+import 'package:chatsphere/presentation/screens/auth/complete_auth.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
