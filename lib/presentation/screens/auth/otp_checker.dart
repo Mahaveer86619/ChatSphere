@@ -7,13 +7,12 @@ import 'package:chatsphere/presentation/components/text_field.dart';
 import 'package:chatsphere/presentation/helpers/auth_gate.dart';
 import 'package:chatsphere/presentation/helpers/auth_service.dart';
 import 'package:chatsphere/presentation/screens/auth/auth_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:chatsphere/presentation/screens/auth/complete_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pinput/pinput.dart';
 
-import 'complete_auth.dart';
+import '../../helpers/database_service.dart';
 
 class OtpChecker extends StatefulWidget {
   final String verificationId;
@@ -34,6 +33,7 @@ class _OtpCheckerState extends State<OtpChecker> {
 
   final GetIt getIt = GetIt.instance;
   late AuthService authService;
+  late DatabaseService databaseService;
 
   final otpController = TextEditingController();
 
@@ -46,13 +46,24 @@ class _OtpCheckerState extends State<OtpChecker> {
         otpController.text.trim(),
         widget.verificationId,
       );
-      if (result) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const AuthGate(),
-          ),
-        );
+      if (result) { // check if user exists, then desides to go to auth gate or to complete auth
+        if (await databaseService.checkIfUserExists(authService.user!.uid)) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AuthGate(),
+            ),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CompleteAuthScreen(
+                authMethod: 'Phone',
+              ),
+            ),
+          );
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,6 +128,7 @@ class _OtpCheckerState extends State<OtpChecker> {
   void initState() {
     super.initState();
     authService = getIt.get<AuthService>();
+    databaseService = getIt.get<DatabaseService>();
   }
 
   @override

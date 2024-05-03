@@ -21,6 +21,12 @@ class DatabaseService {
             );
   }
 
+  Future<bool> checkIfUserExists(String uid) async {
+    final userDocRef = FirebaseFirestore.instance.collection('users').doc(uid);
+    final docSnapshot = await userDocRef.get();
+    return docSnapshot.exists;
+  }
+
   Future<bool> createUserProfile(UserProfile userProfile) async {
     bool result = true;
     await usersCollection
@@ -31,5 +37,17 @@ class DatabaseService {
       result = false;
     }); // id and // data
     return result;
+  }
+
+  Future<Map<String, dynamic>?> getUserDetails(String uid) async {
+    final userDocRef = FirebaseFirestore.instance.collection('users').doc(uid);
+    final docSnapshot = await userDocRef.get();
+
+    // Check if document exists
+    if (docSnapshot.exists) {
+      return docSnapshot.data();
+    } else {
+      return null;
+    }
   }
 }
