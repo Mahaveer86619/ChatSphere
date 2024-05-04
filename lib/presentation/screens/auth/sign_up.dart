@@ -27,6 +27,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   final GetIt getIt = GetIt.instance;
   late AuthService authService;
+  late DatabaseService databaseService;
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -45,7 +46,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         // uploadAndSaveUserProfile(uid: authService.user!.uid);
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const CompleteAuthScreen(authMethod: 'Email',)),
+          MaterialPageRoute(
+              builder: (context) => const CompleteAuthScreen(
+                    authMethod: 'Email',
+                  )),
         );
       }
     } catch (e) {
@@ -65,26 +69,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  // Future<String?> uploadAndSaveUserProfile({
-  //   required String uid,
-  // }) async {
-  //   final randomAvatar = getRandomAvatar();
-  //   final pfpUrl = await storageService.uploadAvatarAndGetUrl(
-  //     assetPath: randomAvatar,
-  //   );
-  //   if (pfpUrl != null) {
-  //     await databaseService.createUserProfile(
-  //       userProfile: UserProfile(
-  //         uid: uid,
-  //         pfpUrl: pfpUrl,
-  //       ),
-  //     );
-  //     return pfpUrl;
-  //   } else {
-  //     return null;
-  //   }
-  // }
-
   void onChangeSignIn() {
     Navigator.pushReplacement(
       context,
@@ -101,10 +85,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
       });
       final result = await authService.googleAuth();
       if (result) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const CompleteAuthScreen(authMethod: 'Google',)),
-        );
+        if (await databaseService.checkIfUserExists(authService.user!.uid)) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AuthGate(),
+            ),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CompleteAuthScreen(
+                authMethod: 'Google',
+              ),
+            ),
+          );
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -127,6 +124,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void initState() {
     super.initState();
     authService = getIt.get<AuthService>();
+    databaseService = getIt.get<DatabaseService>();
   }
 
   @override

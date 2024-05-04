@@ -5,6 +5,7 @@ import 'package:chatsphere/presentation/components/loading.dart';
 import 'package:chatsphere/presentation/components/text_field.dart';
 import 'package:chatsphere/presentation/helpers/auth_gate.dart';
 import 'package:chatsphere/presentation/helpers/auth_service.dart';
+import 'package:chatsphere/presentation/helpers/database_service.dart';
 import 'package:chatsphere/presentation/screens/auth/phone_auth.dart';
 import 'package:chatsphere/presentation/screens/auth/sign_up.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,8 +26,8 @@ class _SignInScreenState extends State<SignInScreen> {
   bool isLoading = false;
 
   final GetIt getIt = GetIt.instance;
-
   late AuthService authService;
+  late DatabaseService databaseService;
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -78,12 +79,23 @@ class _SignInScreenState extends State<SignInScreen> {
       });
       final result = await authService.googleAuth();
       if (result) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const CompleteAuthScreen(authMethod: 'Email',),
-          ),
-        );
+        if (await databaseService.checkIfUserExists(authService.user!.uid)) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AuthGate(),
+            ),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CompleteAuthScreen(
+                authMethod: 'Google',
+              ),
+            ),
+          );
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -115,6 +127,7 @@ class _SignInScreenState extends State<SignInScreen> {
   void initState() {
     super.initState();
     authService = getIt.get<AuthService>();
+    databaseService = getIt.get<DatabaseService>();
   }
 
   @override
